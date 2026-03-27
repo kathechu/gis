@@ -1,0 +1,126 @@
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
+    <title>Data-driven continuous color | High School Education in the United States  | ArcGIS Maps SDK for JavaScript 4.28</title>
+
+    <link rel="stylesheet" href="https://js.arcgis.com/4.28/esri/themes/light/main.css" />
+    <script src="https://js.arcgis.com/4.28/"></script>
+
+    <style>
+      html,
+      body,
+      #viewDiv {
+        padding: 0;
+        margin: 0;
+        height: 100%;
+        width: 100%;
+      }
+    </style>
+
+    <script>
+      require(["esri/Map", "esri/views/MapView", "esri/layers/FeatureLayer", "esri/widgets/Legend"], (
+        Map,
+        MapView,
+        FeatureLayer,
+        Legend
+      ) => {
+        const defaultSym = {
+          type: "simple-fill", // autocasts as new SimpleFillSymbol()
+          outline: {
+            // autocasts as new SimpleLineSymbol()
+            color: [128, 128, 128, 0.2],
+            width: "0.5px"
+          }
+        };
+
+        /*****************************************************************
+         * Set a color visual variable on the renderer. Color visual variables
+         * create continuous ramps that map low data values to weak or
+         * neutral colors and high data values to strong/deep colors. Features
+         * with data values in between the min and max data values are assigned
+         * a color proportionally between the min and max colors.
+         *****************************************************************/
+
+        const renderer = {
+          type: "simple", // autocasts as new SimpleRenderer()
+          symbol: defaultSym,
+          label: "Tract",
+          visualVariables: [
+            {
+              type: "color",
+              field: "NOHS_CY",
+                         legendOptions: {
+                title: "No High School Education Count"
+              },
+              stops: [
+                {
+                  value: 0,
+                  color: "#F5E6E6",
+                  label: "0"
+                },
+                {
+                  value: 500,
+                  color: "#8B0000",
+                  label: ">500"
+                }
+              ]
+            }
+          ]
+        };
+
+        const eduLayer = new FeatureLayer({
+          url:
+            "https://services.arcgis.com/V6ZHFr6zdgNZuVG0/ArcGIS/rest/services/Census_Tracts_education_smart_mapping/FeatureServer/0",
+          renderer: renderer,
+          title: "Less than High School Education in the U.S.",
+          popupTemplate: {
+            // autocasts as new PopupTemplate()
+            title: "{NAME}",
+            content: "There were {NOHS_CY} counts of people with an education background of less than 9th grade in this tract. This tract has a medium household income of ${MEDHINC_CY}.",
+          }
+          
+        });
+
+//         const query = eduLayer.createQuery();
+// query.where = "1=1";
+// query.outStatistics = [
+//   { statisticType: "min", onStatisticField: "NOHS_CY", outStatisticFieldName: "min_nohs" },
+//   { statisticType: "max", onStatisticField: "NOHS_CY", outStatisticFieldName: "max_nohs" },
+//   { statisticType: "avg", onStatisticField: "NOHS_CY", outStatisticFieldName: "avg_nohs" }
+// ];
+// eduLayer.queryFeatures(query).then((result) => {
+//   const stats = result.features[0].attributes;
+//   console.log("Min:", stats.min_nohs, "Max:", stats.max_nohs, "Avg:", stats.avg_nohs);
+// });
+
+
+        const map = new Map({
+          basemap: "streets",
+          layers: [eduLayer]
+        });
+
+        const view = new MapView({
+          container: "viewDiv",
+          map: map,
+          center: [-98.5795, 39.8283],
+          zoom: 4
+        });
+
+        view.ui.add(
+          new Legend({
+            view: view
+          }),
+          "bottom-left"
+        );
+      });
+
+
+
+    </script>
+  </head>
+
+  <body>
+    <div id="viewDiv"></div>
+  </body>
+</html>

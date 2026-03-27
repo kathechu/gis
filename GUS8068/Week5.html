@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset=utf-8 />
+    <title>Week 5: United States Electric Power Generation</title>
+    <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.4.0/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.4.0/dist/leaflet.js"></script>
+    <link href='http://fonts.googleapis.com/css?family=Lato' rel='stylesheet' type='text/css'>
+
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: whitesmoke;
+            font-family: Lato, sans-serif;
+            color: #0D0000;
+        }
+        header {
+            padding: 6px 10%;
+        }
+        h1 {
+            display: inline-block;
+            margin-right: 20px;
+            color: #001323;
+        }
+        h2 {
+            display: inline-block;
+            color: #001323;
+        }
+        #map {
+            width: 80%;
+            height: 540px;
+            margin: 10px auto;
+        }
+        footer {
+            padding: 6px 10%;
+            width: 80%;
+        }
+        p {
+            font-size: 1em;
+            color: #001323;
+        }
+        .leaflet-control-layers-overlays label span {
+        font-weight: bold;
+        }
+        .leaflet-control-layers-overlays label:nth-child(1) span {
+            color: green;
+        }
+        .leaflet-control-layers-overlays label:nth-child(2) span {
+            color: brown;
+        }
+        .leaflet-control-layers-overlays label:nth-child(3) span {
+            color: goldenrod;
+        }
+        .legend {
+        padding: 6px 8px;
+        background: white;
+        box-shadow: 0 0 15px rgba(0,0,0,0.2);
+        border-radius: 5px;
+        }
+        .legend circle {
+            fill: gray;
+            opacity: 0.5;
+            stroke: gray;
+            stroke-width: 2;
+        }
+
+
+    </style>
+</head>
+
+<body>
+    <header>
+        <h1>United States Electric Power Generation</h1>
+        <h2>Map of Biomass, Geothermal, and Solar Power Plants</h2>
+    </header>
+
+    <div id='map'></div>
+
+    <footer>
+        <p>Map authored by Katherine Chu</p>
+        <p>Each energy source's visibility can be toggled using the layer control. Power is in units of megawatts (MW).</p>
+        <p><b>Design Principle and Change in Map</b></p>
+        <p>For the map, I followed the principle: Use relative units and breakpoints. While the original map already follows this principle, I felt that it needed an extra step for it to be easily understood by viewers. By adding a legend for the marker sizes, the viewer can better understand the capacity of the different plants at a glance.</p>
+    </footer>
+
+    <script src="power-plants.js"></script>
+    <script>
+
+      var map = L.map('map', {
+          center: [36,-94],
+          zoom: 4,
+      });
+      
+      var tiles = L.tileLayer('http://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png', {
+          attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="http://cartodb.com/attributions">CartoDB</a>',
+          subdomains: 'abcd',
+          maxZoom: 19
+      });  
+      
+      tiles.addTo(map);
+        
+         
+    //step 2
+      
+//    plants.features.sort(function(a, b) {
+//    return b.properties.capacity_mw - a.properties.capacity_mw;
+// });
+    
+    //step 1    and then change to step 3 with 'return'
+// Create separate layer groups for each fuel source
+var biomassLayer = L.layerGroup();
+var geothermalLayer = L.layerGroup();
+var solarLayer = L.layerGroup();
+
+// Create markers for each fuel source
+L.geoJson(plants, {
+    pointToLayer: function(feature, latlng) {
+        return L.circleMarker(latlng, {
+            color: getColor(feature.properties.fuel_source),
+            weight: 2,
+            fillColor: getColor(feature.properties.fuel_source),
+            fillOpacity: .5,
+            radius: getRadius(feature.properties.capacity_mw)
+        });
+    },
+    filter: function(feature) {
+        if(feature.properties.fuel_source['Biomass'] || 
+           feature.properties.fuel_source['Geothermal'] || 
+           feature.properties.fuel_source['Solar']){
+            return feature;
+        }
+    },
+    onEachFeature: function(feature, layer) {
+        layer.on('mouseover', function() {
+            layer.setStyle({ fillColor: 'red' });
+        });
+        layer.on('mouseout', function() {
+            layer.setStyle({ fillColor: getColor(feature.properties.fuel_source) });
+        });
+
+        var name = feature.properties.plant_name;
+        var capacity = feature.properties.capacity_mw.toLocaleString();
+        var popup = "<b>" + name + "</b><br>" + capacity + " MW<br>";
+        layer.bindPopup(popup);
+
+        // Add to appropriate layer group
+        if(feature.properties.fuel_source['Biomass']) {
+            layer.addTo(biomassLayer);
+        } else if(feature.properties.fuel_source['Geothermal']) {
+            layer.addTo(geothermalLayer);
+        } else if(feature.properties.fuel_source['Solar']) {
+            layer.addTo(solarLayer);
+        }
+    }
+});
+
+// Add all layers to map by default
+biomassLayer.addTo(map);
+geothermalLayer.addTo(map);
+solarLayer.addTo(map);
+
+// Create layer control
+var overlays = {
+    "Biomass": biomassLayer,
+    "Geothermal": geothermalLayer,
+    "Solar": solarLayer
+};
+
+L.control.layers(null, overlays, {collapsed: false}).addTo(map);
+
+var legend = L.control({position: 'bottomright'});
+
+legend.onAdd = function(map) {
+    var div = L.DomUtil.create('div', 'legend');
+div.innerHTML = '<b>Capacity (MW)</b><br>' +
+    '<svg height="90" width="100">' +
+    '<circle cx="30" cy="20" r="15"/><text x="50" y="25">500 MW</text>' +
+    '<circle cx="30" cy="50" r="10"/><text x="50" y="55">200 MW</text>' +
+    '<circle cx="30" cy="75" r="7"/><text x="50" y="79">100 MW</text>' +
+    '</svg>';
+    return div;
+};
+
+legend.addTo(map);
+
+
+
+
+function getRadius(area){
+    var radius = Math.sqrt(area/Math.PI);
+    return radius * .8;   
+}
+
+function getColor(fuelSource) {
+    if (fuelSource['Biomass']) return 'green';
+    if (fuelSource['Geothermal']) return 'brown';
+    if (fuelSource['Solar']) return 'gold';
+    return 'gray';
+}
+
+    
+    </script>
+    
+</body>
+
+</html>

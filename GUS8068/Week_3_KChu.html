@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Leaflet Map of Harrisburg and Lancaster</title>
+
+  <!-- Include Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+
+</head>
+<body>
+
+  <!-- Create the map div -->
+  <div id="map" style="width: 800px; height: 500px;"></div>
+
+  <!-- Include Leaflet JavaScript -->
+  <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+
+  <script>
+
+    // Map center and zoom level
+    var map = L.map('map').setView([40.16, -76.60], 7);
+
+    // Tile layer https://leafletjs.com/reference.html#tilelayer
+    L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, Tiles style by <a href="https://www.hotosm.org/" target="_blank">Humanitarian OpenStreetMap Team</a> hosted by <a href="https://openstreetmap.fr/" target="_blank">OpenStreetMap France</a>'
+    }).addTo(map);
+
+    // City data
+    var Harris = {
+      name: 'Harrisburg', 
+      lat: 40.2732,
+      lng: -76.8867,
+      population: 50000
+    }
+    
+    var Lan = {
+      name: 'Lancaster',  
+      lat: 40.0379,
+      lng: -76.3055,
+      population: 58000
+    };
+
+    // Use circle https://leafletjs.com/reference.html#circle
+       var circle_h = L.circle([Harris.lat, Harris.lng], {
+        // adjusted so that circle is more visible
+        radius: Harris.population,
+        color: 'gold',
+        fillColor: 'blue',
+        weight: 3
+        // Tooltip https://leafletjs.com/reference.html#tilelayer
+        // Didn't know you can separate the "<b> Name </b>" with +, will keep that in mind to help keep things more organized
+        }).bindTooltip ("<b>" + 'Name: ' + "</b>" + "<i>" + Harris.name +"</i>" + "<br>" + "<b>" + 'Population: ' + "</b>"  + "<i>" + Harris.population +"</i>")
+      .addTo(map);
+    
+      
+      var circle_l = L.circle([Lan.lat, Lan.lng], {
+        radius:   Lan.population,
+        color: 'red',
+        fillColor: 'blue',
+        weight: 3
+        
+        }).bindTooltip ("<b>" + 'Name: ' + "</b>" + "<i>" + Lan.name + "</i>" + "<br>" + "<b>" + 'Population: ' + "</b>"  + "<i>" + Lan.population +"</i>")
+      .addTo(map);
+    
+    
+  </script>
+
+</body>
+</html>

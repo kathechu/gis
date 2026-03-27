@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Map of Philadelphia Parks and Recreation Program Sites</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"/>
+</head>
+
+<body>
+
+  <div id="map" style="width: 600px; height: 500px; margin: 0 auto;"></div>
+
+  <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+  <script src="PPR_Program_Sites.geojson"></script>
+
+  <script>
+
+    var map = L.map('map').setView([40.0,-75.1652], 11);
+
+    // L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    //   attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    // }).addTo(map);
+
+
+// Tile Layer Documentation: https://leafletjs.com/reference.html#tilelayer    
+    L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}', {
+      attribution: '© <a href="https://www.mapbox.com/">Mapbox</a>',
+      maxZoom: 18,
+      id: 'mapbox/outdoors-v11',
+      tileSize: 512,
+      zoomOffset: -1,
+      accessToken: 'pk.eyJ1IjoidHVuNDg4MDEiLCJhIjoiY21sNDgyZW93MTAwZjNkcHhjNDA0ZXR1ciJ9.mboq8OMMkN-JmjtQN0Xzyg'
+    }).addTo(map);
+
+// Point to Layer Documentation: https://leafletjs.com/examples/geojson/
+// LatLng Documentation: https://leafletjs.com/reference.html#latlng
+    var worldPlaces = L.geoJson(ppr, {
+        pointToLayer: function(feature,latlng) {
+              console.log(feature.properties)
+              return L.circleMarker(latlng, {
+                radius: 2, 
+                color: 'green',
+                  //step4
+              });   
+          },
+
+// Filter Documentation: https://leafletjs.com/examples/geojson/
+filter: function(feature, layer){
+          if(feature.properties.park_name === 'Frank Glavin Playground'){
+              return true
+                        }
+      }
+
+//       filter: function(feature, layer){
+//           if(feature.properties.pop_max > 3000000){
+//               return true
+//                         };
+//       }
+    }).addTo(map)
+
+  </script>
+
+</body>
+</html>
