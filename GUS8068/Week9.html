@@ -1,0 +1,135 @@
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
+    <title>Data-driven continuous size | Sample | ArcGIS Maps SDK for JavaScript 4.28</title>
+
+    <link rel="stylesheet" href="https://js.arcgis.com/4.28/esri/themes/dark/main.css" />
+    <script src="https://js.arcgis.com/4.28/"></script>
+
+    <style>
+      html,
+      body,
+      #viewDiv {
+        padding: 0;
+        margin: 0;
+        height: 100%;
+        width: 100%;
+      }
+    </style>
+
+    <script>
+      require(["esri/Map", "esri/views/MapView", "esri/layers/FeatureLayer", "esri/widgets/Legend"], (
+        Map,
+        MapView,
+        FeatureLayer,
+        Legend
+      ) => {
+        const defaultSym = {
+          type: "simple-marker", // autocasts as new SimpleMarkerSymbol()
+          color: [0, 0, 0, 0],
+          outline: {
+            // autocasts as new SimpleLineSymbol()
+            color: "#EE4B2B",
+            width: 1
+          }
+        };
+
+        /*****************************************************************
+         * Set a size visual variable on the renderer. Size visual variables
+         * create continuous ramps that map low data values to small icons
+         * and high data values to large icons. Features
+         * with data values in between the min and max data values are assigned
+         * a size proportionally between the min and max sizes specified in
+         * `minSize` and `maxSize` or `stops`.
+         *****************************************************************/
+
+        const renderer = {
+          type: "simple", // autocasts as new SimpleRenderer()
+          symbol: defaultSym,
+          visualVariables: [
+            {
+              type: "size",
+              field: "ELEV_FT",
+    
+              legendOptions: {
+                title: "Elevation"
+              },
+              stops: [
+                {
+                  value: 345,
+                  size: 4,
+                  label: "345 ft"
+                },
+                {
+                  value: 8000,
+                  size: 12,
+                  label: "8,000 ft"
+                },
+                { value: 14000,
+                  size: 20,
+                  label: "14,000 ft" },
+
+                {
+                  value: 20310,
+                  size: 28,
+                  label: "20,310 ft"
+                }
+              ]
+            }
+          ]
+        };
+
+        const elevLayer = new FeatureLayer({
+          url:
+            "https://services.arcgis.com/V6ZHFr6zdgNZuVG0/ArcGIS/rest/services/state_high_points/FeatureServer/0",
+          renderer: renderer,
+          title: "Highest Elevation Points per State",
+          popupTemplate: {
+            // autocasts as new PopupTemplate()
+            title: "{STATE}",
+            content: "The highest elevation in {STATE} is {ELEV_FT} ft at {HIGH_POINT} ",
+            fieldInfos: [
+              {
+                fieldName: "HIGH_POINT",
+                format: {
+                  digitSeparator: true,
+                  places: 0
+                }
+              },
+            ]
+          }
+        });
+
+        const map = new Map({
+          basemap: "topo-vector",
+          layers: [elevLayer]
+        });
+
+        const view = new MapView({
+          container: "viewDiv",
+          map: map,
+          center: [-98.5795, 39.8283],
+          zoom: 4
+        });
+
+        /******************************************************************
+         *
+         * Add layers to layerInfos on the legend
+         *
+         ******************************************************************/
+
+        view.ui.add(
+          new Legend({
+            view: view
+          }),
+          "top-right"
+        );
+      });
+    </script>
+  </head>
+
+  <body>
+    <div id="viewDiv"></div>
+  </body>
+</html>
