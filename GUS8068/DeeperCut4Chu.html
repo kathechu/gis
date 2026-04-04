@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Philadelphia Heat Vulnerability Index</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.Default.css" />
+    <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet.markercluster/dist/leaflet.markercluster.js"></script>
+
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+            font: 16px/1.5 Arial, Helvetica, sans-serif;
+        }
+        #map {
+            width: 1000px;
+            height: 800px;
+        }
+        .info {
+            padding: 6px 8px;
+            font: 14px/16px Arial, Helvetica, sans-serif;
+            background: white;
+            background: rgba(255,255,255,0.8);
+            box-shadow: 0 0 15px rgba(0,0,0,0.2);
+            border-radius: 5px;
+        }
+        .info h4 {
+            margin: 0 0 5px;
+            color: #777;
+        }
+        .legend {
+            text-align: left;
+            line-height: 18px;
+            color: #555;
+        }
+        .legend i {
+            width: 18px;
+            height: 18px;
+            float: left;
+            margin-right: 8px;
+            opacity: 0.7;
+        }
+        .filter-control {
+            padding: 6px 8px;
+            background: white;
+            background: rgba(255,255,255,0.8);
+            box-shadow: 0 0 15px rgba(0,0,0,0.2);
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div style="width:1000px; margin: 0 auto;">
+
+    <h1 align ="center">Philadelphia Heat Vulnerability Index</h1>
+    <div id='map' aria-label="Philadelphia Heat Vulnerability Index"></div>
+    <p>The map plots the distribution of heat vulnerability across different census tracts in Philadelphia. There is a layer toggle to switch between the Heat Vulnerability Index and Tree Count layers. Use it, along with the filter slider, to examine any relationships between the HVI score (higher meaning more vulnerable) and the tree count.<br>There are likely other factors that contribute to heat vulnerability in the city asides from tree cover such as building density and surface materials.</p>
+    </div>
+
+    <script type="text/javascript" src="hvi_trees.geojson"></script>
+
+    <script type="text/javascript">
+
+        // 1. Map initialization
+        var currentLayer = 'hvi';
+        var map = L.map('map').setView([39.99, -75.1], 11);
+
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+            maxZoom: 19,
+            attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors © <a href="https://carto.com/">CARTO</a>'
+        }).addTo(map);
+
+        // 2. Controls
+        var toggleControl = L.control({position: 'topleft'});
+        toggleControl.onAdd = function(map) {
+            var div = L.DomUtil.create('div', 'info');
+            div.innerHTML = `
+                <h4>Display Layer</h4>
+                <button onclick="switchLayer('hvi')" id="hviBtn" style="width:100%; margin-bottom:5px; padding:5px; background:#E31A1C; color:white; border:none; border-radius:3px; cursor:pointer;">HVI Score</button>
+                <button onclick="switchLayer('tree')" id="treeBtn" style="width:100%; padding:5px; background:#ccc; color:black; border:none; border-radius:3px; cursor:pointer;">Tree Count</button>
+            `;
+            L.DomEvent.disableClickPropagation(div);
+            return div;
+        };
+        toggleControl.addTo(map);
+
+        var info = L.control();
+        info.onAdd = function (map) {
+            this._div = L.DomUtil.create('div', 'info');
+            this.update();
+            return this._div;
+        };
+        info.update = function (props) {
+            this._div.innerHTML = '<h4>' + (currentLayer === 'hvi' ? 'Heat Vulnerability Index' : 'Tree Count') + '</h4>' +
+                (props ? '<b>Tract: ' + props.name10 + '</b><br/>' +
+                (currentLayer === 'hvi' ? props.hvi_score.toFixed(3) + ' HVI Score' : props.tree_count + ' Trees')
+                : 'Hover over a tract');
+        };
+        info.addTo(map);
+
+        // 3. Classification function
+        function calculateQuantiles(data, numClasses) {
+            data = data.sort((a, b) => a - b);
+            const breaks = [Math.min(...data)];
+            for (let i = 1; i < numClasses; i++) {
+                const idx = Math.floor((i / numClasses) * data.length);
+                breaks.push(data[idx]);
+            }
+            breaks.push(Math.max(...data));
+            return breaks;
+        }
+
+        // 4. Color functions
+        function getColor(d, breaks) {
+            const colors = ['#FFEDA0', '#FED976', '#FEB24C', '#FD8D3C',
+                          '#FC4E2A', '#E31A1C', '#BD0026', '#800026'];
+            for (let i = 0; i < breaks.length - 1; i++) {
+                if (d <= breaks[i + 1]) {
+                    return colors[i];
+                }
+            }
+            return colors[colors.length - 1];
+        }
+
+        function getTreeColor(d, breaks) {
+            const colors = ['#d73027', '#fc8d59', '#fee08b', '#91cf60', '#1a9850'];
+            for (let i = 0; i < breaks.length - 1; i++) {
+                if (d <= breaks[i + 1]) {
+                    return colors[i];
+                }
+            }
+            return colors[colors.length - 1];
+        }
+
+        // 5. Style functions
+        function style(feature) {
+            return {
+                fillColor: getColor(feature.properties.hvi_score, breaks),
+                weight: 2,
+                opacity: 1,
+                color: 'white',
+                dashArray: '3',
+                fillOpacity: 0.7
+            };
+        }
+
+        function treeStyle(feature) {
+            return {
+                fillColor: getTreeColor(feature.properties.tree_count, treeBreaks),
+                weight: 2,
+                opacity: 1,
+                color: 'white',
+                dashArray: '3',
+                fillOpacity: 0.7
+            };
+        }
+
+        // 6. Highlight/reset functions
+        var highlightedLayer = null;
+
+        function highlightFeature(e) {
+            if (highlightedLayer) {
+                if (currentLayer === 'hvi') {
+                    highlightedLayer.setStyle(style(highlightedLayer.feature));
+                } else {
+                    highlightedLayer.setStyle(treeStyle(highlightedLayer.feature));
+                }
+            }
+            highlightedLayer = e.target;
+            var layer = e.target;
+            layer.setStyle({
+                weight: 3,
+                color: 'black',
+                dashArray: '',
+                fillOpacity: 0.7
+            });
+            if (!L.Browser.ie && !L.Browser.opera && !L.Browser.edge) {
+                layer.bringToFront();
+            }
+            info.update(layer.feature.properties);
+        }
+
+        function resetHighlight(e) {
+            var layer = e.target;
+            if (currentLayer === 'hvi') {
+                layer.setStyle(style(layer.feature));
+            } else {
+                layer.setStyle(treeStyle(layer.feature));
+            }
+            highlightedLayer = null;
+            info.update();
+        }
+
+        function zoomToFeature(e) {
+            map.fitBounds(e.target.getBounds());
+        }
+
+        function onEachFeature(feature, layer) {
+            layer.on({
+                mouseover: highlightFeature,
+                mouseout: resetHighlight,
+                click: zoomToFeature
+            });
+        }
+
+        // 7. Break calculations
+        let breaks = calculateQuantiles(
+            hviTrees.features.map(f => f.properties.hvi_score),
+            5
+        );
+
+        let treeBreaks = calculateQuantiles(
+            hviTrees.features.map(f => f.properties.tree_count),
+            5
+        );
+
+        // 8. Layer creation
+        var geojson = L.geoJson(hviTrees, {
+            style: style,
+            onEachFeature: onEachFeature
+        }).addTo(map);
+        geojson.bringToBack();
+
+        // 9. Legend
+        var legend = L.control({position: 'bottomright'});
+        legend.onAdd = function (map) {
+            var div = L.DomUtil.create('div', 'info legend');
+            updateLegend(div);
+            return div;
+        };
+        legend.addTo(map);
+
+        function updateLegend(div) {
+            const container = div || legend.getContainer();
+            if (!container) return;
+            let labels = [];
+            for (let i = 0; i < breaks.length - 1; i++) {
+                const from = Math.round(breaks[i]);
+                const to = Math.round(breaks[i + 1]);
+                labels.push(
+                    '<i style="background:' + getColor((breaks[i] + breaks[i + 1])/2, breaks) + '"></i> ' +
+                    from.toLocaleString() + '&ndash;' + to.toLocaleString()
+                );
+            }
+            container.innerHTML = '<h4>HVI Score</h4>' + labels.join('<br>');
+        }
+
+        function updateTreeLegend(div) {
+            const container = div || legend.getContainer();
+            if (!container) return;
+            let labels = [];
+            for (let i = 0; i < treeBreaks.length - 1; i++) {
+                const from = Math.round(treeBreaks[i]);
+                const to = Math.round(treeBreaks[i + 1]);
+                labels.push(
+                    '<i style="background:' + getTreeColor((treeBreaks[i] + treeBreaks[i + 1])/2, treeBreaks) + '"></i> ' +
+                    from.toLocaleString() + '&ndash;' + to.toLocaleString()
+                );
+            }
+            container.innerHTML = '<h4>Tree Count</h4>' + labels.join('<br>');
+        }
+
+        // 10. Update functions
+        function switchLayer(type) {
+            currentLayer = type;
+            if (type === 'hvi') {
+                geojson.setStyle(style);
+                updateLegend();
+                document.getElementById('hviBtn').style.background = '#E31A1C';
+                document.getElementById('hviBtn').style.color = 'white';
+                document.getElementById('treeBtn').style.background = '#ccc';
+                document.getElementById('treeBtn').style.color = 'black';
+            } else {
+                geojson.setStyle(treeStyle);
+                updateTreeLegend();
+                document.getElementById('treeBtn').style.background = '#2ecc71';
+                document.getElementById('treeBtn').style.color = 'white';
+                document.getElementById('hviBtn').style.background = '#ccc';
+                document.getElementById('hviBtn').style.color = 'black';
+            }
+        }
+
+        function highlightMaxHVI() {
+            const maxFeature = hviTrees.features.reduce((max, f) =>
+                f.properties.hvi_score > max.properties.hvi_score ? f : max
+            );
+            geojson.eachLayer(function(layer) {
+                if (layer.feature.properties.name10 === maxFeature.properties.name10) {
+                    geojson.resetStyle();
+                    layer.setStyle({ weight: 4, color: '#000000', fillOpacity: 0.9 });
+                    map.fitBounds(layer.getBounds());
+                    info.update(layer.feature.properties);
+                }
+            });
+        }
+
+        // 11. Filter control
+        var filterControl = L.control({position: 'bottomleft'});
+        filterControl.onAdd = function(map) {
+            var div = L.DomUtil.create('div', 'info filter-control');
+            const min = Math.min(...hviTrees.features.map(f => f.properties.hvi_score)).toFixed(2);
+            const max = Math.max(...hviTrees.features.map(f => f.properties.hvi_score)).toFixed(2);
+            div.innerHTML = `
+                <h4>Filter by HVI Score</h4>
+                <label>Min: <span id="minVal">${min}</span></label>
+                <input type="range" id="minSlider" min="${min}" max="${max}" step="0.01" value="${min}" style="width:100%">
+                <label>Max: <span id="maxVal">${max}</span></label>
+                <input type="range" id="maxSlider" min="${min}" max="${max}" step="0.01" value="${max}" style="width:100%">
+            `;
+            L.DomEvent.disableClickPropagation(div);
+            return div;
+        };
+        filterControl.addTo(map);
+
+        function filterTracts() {
+            const minVal = parseFloat(document.getElementById('minSlider').value);
+            const maxVal = parseFloat(document.getElementById('maxSlider').value);
+            document.getElementById('minVal').textContent = minVal.toFixed(2);
+            document.getElementById('maxVal').textContent = maxVal.toFixed(2);
+            geojson.eachLayer(function(layer) {
+                const score = layer.feature.properties.hvi_score;
+                if (score >= minVal && score <= maxVal) {
+                    layer.setStyle({ fillOpacity: 0.7, opacity: 1 });
+                } else {
+                    layer.setStyle({ fillOpacity: 0, opacity: 0 });
+                }
+            });
+        }
+
+        // 12. Event listeners
+        document.getElementById('minSlider').addEventListener('input', filterTracts);
+        document.getElementById('maxSlider').addEventListener('input', filterTracts);
+
+        // 13. Attribution
+        map.attributionControl.addAttribution('Philadelphia HVI and Tree CountData &copy; <a href="https://opendataphilly.org/">Open Data Philly</a>');
+
+    </script>
+</body>
+</html>
