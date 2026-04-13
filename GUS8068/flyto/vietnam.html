@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Vacation in Vietnam </title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Leaflet CSS -->
+  <link 
+    rel="stylesheet" 
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+  <!-- Basic page layout -->
+  <style>
+    body {
+      margin: 0;
+      display: flex;
+      height: 100vh;
+      font-family: "Helvetica Neue", sans-serif;
+    }
+    #map { flex: 3; }
+    #story {
+      flex: 1;
+      padding: 1em;
+      overflow-y: auto;
+      background: #fafafa;
+      border-left: 2px solid #ddd;
+    }
+    h2 { margin-top: 0; }
+    button {
+      display: block;
+      margin: 1em 0;
+      width: 100%;
+      padding: 0.5em;
+      border: none;
+      background-color: #333;
+      color: white;
+      font-size: 1em;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+    button:hover { background-color: #555; }
+    img {
+      width: 220px;
+      height: auto;
+      border-radius: 6px;
+      margin-top: 5px;
+    }
+    .leaflet-popup-content {
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="story">
+    <h2>Two Weeks in Vietnam</h2>
+    <p>I had a summer vacation in Vietnam in 2024.</p>
+    <button onclick="goToScene(0)">Stop 1: Ho Chi Minh City</button>
+    <button onclick="goToScene(1)">Stop 2: Da Nang</button>
+    <button onclick="goToScene(2)">Stop 3: Hanoi</button>
+  </div>
+
+  <div id="map"></div>
+
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <script>
+    // Initialize the map
+    var map = L.map('map').setView([15.9, 107.5], 6);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+      maxZoom: 19,
+      attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    // Define story scenes with coordinates, zoom, and image URLs
+    var scenes = [
+    {
+        coords: [10.7769, 106.7009],
+        zoom: 13,
+        text: "<b>Ho Chi Minh City</b> - A very busy city with lots of cars and motorbikes. Stayed with family here and visited different shopping centers.",
+        image: 'hcm.jpg'
+    },
+        {
+        coords: [16.0544, 108.2022],
+        zoom: 13,
+        text: "<b>Da Nang</b> — Stayed at a hotel by the beach and did some sightseeing at a nearby temple. Got to eat a bunch of tropical fruit - I still miss the fresh passion fruit...",
+        image: 'danang.jpg'
+    },
+    {
+        coords: [21.0285, 105.8542],
+        zoom: 13,
+        text: "<b>Hanoi</b> — My favorite of the three cities I visited, which was more walkable. Thankfully, also less hot because it was further north. Found a cute cafe with a cat and tried their egg coffee.",
+        image: 'hanoi.jpg'
+    }
+];
+
+    // Function to move between scenes
+    function goToScene(i) {
+      var s = scenes[i];
+      map.flyTo(s.coords, s.zoom, { duration: 3 });
+
+      // Add popup with text and image
+      L.popup({ maxWidth: 250 })
+        .setLatLng(s.coords)
+        .setContent(`
+          <div>
+            ${s.text}<br>
+            <img src="${s.image}" alt="Scene image">
+          </div>
+        `)
+        .openOn(map);
+    }
+  </script>
+
+</body>
+</html>
