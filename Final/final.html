@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Map SSA</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"/>
+
+  <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+      font: 16px/1.5 Arial, Helvetica, sans-serif;
+    }
+    #map {
+      width: 1000px;
+      height: 800px;
+      margin: 0 auto;
+    }
+    .info {
+      padding: 6px 8px;
+      font: 14px/16px Arial, Helvetica, sans-serif;
+      background: rgba(255,255,255,0.8);
+      box-shadow: 0 0 15px rgba(0,0,0,0.2);
+      border-radius: 5px;
+    }
+    .info h4 { margin: 0 0 5px; color: #777; }
+    .legend { text-align: left; line-height: 18px; color: #555; }
+    .legend i { width: 18px; height: 18px; float: left; margin-right: 8px; opacity: 0.7; }
+    .layer-btn {
+      width: 100%;
+      margin-bottom: 5px;
+      padding: 5px;
+      border: none;
+      border-radius: 3px;
+      cursor: pointer;
+      background: #ccc;
+      color: black;
+    }
+    .layer-btn.active { background: #2c7bb6; color: white; }
+
+    table { width: 100%; border-collapse: collapse; font: 14px Arial, Helvetica, sans-serif; }
+    td:first-child { font-weight: bold; }
+    th { padding: 8px; border: 1px solid #ddd; background: #2c7bb6; color: white; }
+    td { padding: 8px; border: 1px solid #ddd; }
+    tr:nth-child(even) { background: #f2f2f2; }
+
+  </style>
+</head>
+
+<body>
+  <div style="width:1000px; margin: 0 auto;">
+    <h1 align="center">Visualizing Carbon Stock in Sub-Saharan Africa</h1>
+    <div id="map"></div>
+
+<nav>
+  <h3>Table of Contents</h3>
+  <ol>
+    <li><a href="#overview">Project Overview</a></li>
+    <li><a href="#stats">Summary Statistics</a></li>
+    <li><a href="#sources">Data Sources</a></li>
+    <li><a href="#methodology">Methodology</a>
+      <ol>
+        <li><a href="#processing">Data Processing and Analysis</a></li>
+        <li><a href="#results">Results</a></li>
+      </ol>
+    </li>
+  </ol>
+</nav>
+
+
+    <h2 id="overview">Project Overview</h2>
+    <p>Carbon sequestration is the act of removing carbon dioxide from the atmosphere to store it in either a natural or artifical sink. Carbon dioxide, as one of the greenhouse gases, worsens the impact of climate change. Sub-Saharan Africa is one of the regions that are disproportionately impacted by climate change, with harshening weather conditions negatively affecting agriculture in the area. Climate change exacerbates the existing poverty faced by people who rely on their farms to support their family.<br><br>
+    This project takes a look at the baseline biological carbon sequestration in Sub-Saharan Africa via soil organic carbon and net primary production (NPP). Additionally, it considers the value of implementing carbon crediting programs for the benefit of smallholder farmers based on the country's poverty level.<br><br>
+    The project is inspired by my previous work with the <a href="https://plantvillage.psu.edu/">Penn State PlantVillage lab</a>, which has carbon capture cubes as one of its focuses to support smallholder farmers in Africa. Carbon capture cubes combine agroforestry, biochar, and mycorrhizal fungi to improve soil quality while sinking carbon. This project does not delve deep into calculating the carbon sinking potential of this practice, as the amount of carbon stored is dependent on the species of plant and fungi used, as well as the biochar production method. Future research to review these factors would highlight the most efficient species and methodology would be beneficial.<br>
+    <figure>
+        <img src="img/ccc.png" alt="Carbon Capture Cube" style="display:block; margin: 0 auto; width:400px;">
+        <figcaption align="center">Illustration of a carbon capture cube and its practices (PlantVillage, 2023)</figcaption>
+    </figure>
+    Sequestering carbon is only one method of many to address the climate crisis and this project serves as an exploratory analysis for where it can be implemented. As a result, the project does not consider external factors that may make biological carbon sinking projects difficult or inefficient to implement in certain regions of Sub-Saharan Africa. Further research and analysis into factors such as resource availability and agricultural land use type would be valuable for decision-making.</p>
+
+
+
+<h2 id="sources">Data Sources</h2>
+<p>My primary data sources are the Food and Agriculture Organization's <a href="https://data.apps.fao.org/wapor/?lang=en">WAter Productivity through Open-access of Remotely sensed derived data (WaPOR)</a> and <a href="https://data.isric.org/geonetwork/srv/eng/catalog.search#/home">International Soil Reference and Information Centre (ISRIC)</a>. I utilized WaPOR for their monthly net primary productivity (NPP) raster data, which serve as the basis for the aboveground carbon stock. For belowground carbon, ISRIC provides soil organic carbon (gC/kg) and bulk density (kg/m3) layers, which are separated into six soil depth layers. Additionally, ISRIC provides agricultural land data which is used to assess arable land suitability. To aid in the analysis, I also used a vector layer of Sub-Saharan country boundaries from <a href="https://registry.opendata.aws/naturalearth/">Amazon Web Services' Natural Earth dataset</a> and country-level poverty headcount data from the <a href="https://datahelpdesk.worldbank.org/knowledgebase/articles/906519">World Bank API</a>. All data processing was done using Amazon Web Services (AWS)'s E3 instance, with data stored in an S3 bucket. Python was used for data processing and analysis.</p>
+<h2 id="methodology">Methodology</h2>
+<h3 id="processing">Data Processing and Analysis</h3>
+<p>For the boundary data I read in only contiguous Sub-Saharan Africa countries, which resulted in 43 countries.
+  <figure align="center">
+    <img src="img/ssa_boundaries.png" alt="SSA Boundaries" style="width:50%;">
+    <figcaption align="center">Contiguous Sub-Saharan Africa countries.</figcaption>
+</figure>
+For the poverty data, I joined the country boundaries vector layer with the poverty headcount data using the country name as the key. As for the agricultural land data, I calculated the percentage of agricultural land by dividing the agricultural land area by the total land area for each country.
+  <figure align="center">
+    <img src="img/mal_africa2.png" alt="Agricultural Land" style="width:70%;">
+    <figcaption align="center">Agricultural land distribution.</figcaption>
+</figure>
+Total soil organic carbon (gC/m2) is calculated by multiplying the soil organic carbon content (gC/kg) by the bulk density (kg/m3) and the soil depth (m) for each raster layer. The reason why the soil data is separated into six layers is because each layer of soil has different properties, which can affect the distribution and storage of carbon. After processing the rasters, the figure below shows how soil organic carbon content increases with depth. After calculating each layer's soil organic carbon, I sum the six layers together to get the total soil organic carbon raster. 
+<figure>
+    <img src="img/soc_x_bld_x_depth.png" alt="Soil Organic Carbon at Different Depths" style="width:100%;">
+    <figcaption align="center">Varying soil organic carbon content at different depths.</figcaption>
+</figure>
+To calculate annual NPP (gC/m2/month), I added each monthly NPP raster layer together. After the raster calculations for each data source, I masked the rasters with the country boundaries vector layer. For the overall total carbon, I summed the total soil organic carbon raster and the total NPP raster together, which gives us a baseline estimate of the total carbon stock in Sub-Saharan Africa. 
+<figure>
+    <img src="img/masked_rasters.png" alt="Carbon Data Masked" style="width:100%;">
+    <figcaption align="center">Carbon data masked to Sub-Saharan Africa.</figcaption>
+</figure>
+</p>
+<h3 id="results">Results</h3>
+<p>I chose a choropleth map to visualize the distribution of carbon stocks and poverty rates across Sub-Saharan African countries. This makes it easier to compare across the different countries. Though, an additional interactive choropleth map was created to allow users to toggle between the different layers. This also makes it easier to view values specific to the country the user is interested in. The static choropleth maps below show the distribution of carbon stocks, poverty rates, and agricultural land across Sub-Saharan Africa.
+  <figure>
+    <img src="img/ssa_carbon_pov_ag.png" alt="Choropleth Map of Carbon Stocks, Poverty Rates, and Agricultural Land" style="width:100%;">
+    <figcaption align="center">Choropleth map of carbon stocks, poverty rates, and agricultural land.</figcaption>
+</figure><br>
+  <figure>
+    <img src="img/country_soc_npp_choropleth.png" alt="Choropleth Map of Carbon Stocks" style="width:100%;">
+    <figcaption align="center">Choropleth map of above and belowground carbon stocks.</figcaption>
+</figure>
+</p>
+    <h2 id="stats">Summary Statistics</h2>
+<table style="width: 90%; margin: 0 auto;">
+  <thead>
+    <tr>
+      <th>Statistic</th>
+      <th>Poverty Headcount (%)*</th>
+      <th>Total SOC (TgC)</th>
+      <th>Mean SOC (kg/m²)</th>
+      <th>Total NPP (TgC)</th>
+      <th>Mean NPP (kg/m²)</th>
+      <th>Total Carbon (TgC)</th>
+      <th>Mean Total (kg/m²)</th>
+      <th>Agricultural (%)</th>
+      <th>Agricultural Area (km²)</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><td>Mean</td><td>39.06</td><td>8.69</td><td>21.25</td><td>272.03</td><td>695.10</td><td>272.03</td><td>716.35</td><td>48.97</td><td>29.07</td></tr>
+    <tr><td>Std</td><td>21.21</td><td>9.80</td><td>15.29</td><td>391.26</td><td>405.51</td><td>391.26</td><td>410.55</td><td>28.62</td><td>29.30</td></tr>
+    <tr><td>Min</td><td>3.80</td><td>0.04</td><td>2.94</td><td>0.17</td><td>6.17</td><td>0.17</td><td>11.02</td><td>1.40</td><td>0.04</td></tr>
+    <tr><td>25%</td><td>22.45</td><td>1.73</td><td>10.58</td><td>30.88</td><td>395.32</td><td>30.88</td><td>402.93</td><td>26.45</td><td>4.29</td></tr>
+    <tr><td>50%</td><td>39.00</td><td>4.87</td><td>18.92</td><td>141.19</td><td>703.64</td><td>141.19</td><td>728.55</td><td>49.84</td><td>20.56</td></tr>
+    <tr><td>75%</td><td>47.35</td><td>12.34</td><td>25.94</td><td>311.19</td><td>1,029.82</td><td>311.19</td><td>1,060.47</td><td>73.13</td><td>47.62</td></tr>
+    <tr><td>Max</td><td>85.30</td><td>37.26</td><td>61.34</td><td>2,217.08</td><td>1,379.76</td><td>2,217.08</td><td>1,385.41</td><td>95.79</td><td>99.65</td></tr>
+  </tbody>
+</table>
+
+<p><i>*Poverty headcount data is unavailable for South Sudan, Somalia, Eritrea, and Republic of the Congo.</i></p><br>
+<table style="width: 90%; margin: 0 auto;">
+  <thead>
+    <tr>
+      <th>Country</th>
+      <th>Mean Carbon Density (kg/m²)</th>
+      <th>Poverty Headcount (%)</th>
+      <th>Agricultural (%)</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><td colspan="4" style="background:#7fb9d9; color:white; text-align:center;">Top 5 — Lowest Carbon + Highest Poverty + Highest Agricultural %</td></tr>
+    <tr><td>Burundi</td><td>26.17</td><td><b>74.2%</b></td><td>83.90%</td></tr>
+    <tr><td>Burkina Faso</td><td>80.95</td><td>42.1%</td><td>88.39%</td></tr>
+    <tr><td>Lesotho</td><td>18.44</td><td>41.9%</td><td><b>95.79%</b></td></tr>
+    <tr><td>Zimbabwe</td><td>284.84</td><td>49.2%</td><td>68.61%</td></tr>
+    <tr><td>The Gambia</td><td><b>3.89</b></td><td>22.0%</td><td>81.15%</td></tr>
+    <tr><td colspan="4" style="background:#7fb9d9; color:white; text-align:center;">Bottom 5 — Highest Carbon + Lowest Poverty + Lowest Agricultural %</td></tr>
+    <tr><td>Namibia</td><td>206.98</td><td>22.9%</td><td><b>4.99%</b></td></tr>
+    <tr><td>Guinea</td><td>201.45</td><td>11.7%</td><td>69.01%</td></tr>
+    <tr><td>Cameroon</td><td><b>441.49</b></td><td>26.7%</td><td>33.94%</td></tr>
+    <tr><td>Gabon</td><td>269.63</td><td><b>3.8%</b></td><td>9.01%</td></tr>
+    <tr><td>Equatorial Guinea</td><td>29.19</td><td>8.8%</td><td>5.56%</td></tr>
+  </tbody>
+</table>
+<p>Values are bolded based on their ranking in each column.</p>
+
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+  <script src="final_joined.geojson"></script>
+
+  <script>
+
+    var map = L.map('map').setView([-5, 20], 4);
+
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+      attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors © <a href="https://carto.com/">CARTO</a>'
+    }).addTo(map);
+
+    // Layer definitions
+    var layers = {
+      mean_total_kg_m2: {
+        label: 'Mean Carbon Density (kg/m²)',
+        colors: ['#EDF8FB','#BFD3E6','#9EBCDA','#8C96C6','#8856A7','#810F7C']
+      },
+      mean_npp_kg_m2: {
+        label: 'Mean NPP (kg/m²)',
+        colors: ['#EDF8E9','#BAE4B3','#74C476','#41AB5D','#238B45','#005A32']
+      },
+      mean_soc_kg_m2: {
+        label: 'Mean SOC (kg/m²)',
+        colors: ['#FEFEE2','#FEC44F','#FE9929','#EC7014','#CC4C02','#8C2D04']
+      },
+      pct_agricultural: {
+        label: 'Agricultural Land (%)',
+        colors: ['#F7FCF5','#C7E9C0','#A1D99B','#74C476','#31A354','#006D2C']
+      },
+      poverty_headcount: {
+        label: 'Poverty Headcount (%)',
+        colors: ['#FFFFB2','#FED976','#FEB24C','#FD8D3C','#F03B20','#BD0026']
+      }
+    };
+
+    var currentProp = 'mean_total_kg_m2';
+
+    // Quantile classification
+    function calculateQuantiles(data, n) {
+      data = data.filter(v => v != null).sort((a, b) => a - b);
+      const breaks = [data[0]];
+      for (let i = 1; i < n; i++) {
+        breaks.push(data[Math.floor((i / n) * data.length)]);
+      }
+      breaks.push(data[data.length - 1]);
+      return breaks;
+    }
+
+    // Precompute breaks for each layer
+    var breaks = {};
+    Object.keys(layers).forEach(prop => {
+      breaks[prop] = calculateQuantiles(
+        ssa.features.map(f => f.properties[prop]),
+        6
+      );
+    });
+
+    function getColor(val, prop) {
+      const b = breaks[prop];
+      const colors = layers[prop].colors;
+      for (let i = 0; i < b.length - 1; i++) {
+        if (val <= b[i + 1]) return colors[i];
+      }
+      return colors[colors.length - 1];
+    }
+
+    function style(feature) {
+      const val = feature.properties[currentProp];
+      return {
+        fillColor: val == null ? '#cccccc' : getColor(val, currentProp),
+        weight: 1,
+        opacity: 1,
+        color: 'black',
+        fillOpacity: 0.7
+      };
+    }
+
+    // Hover info control
+    var info = L.control();
+    info.onAdd = function(map) {
+      this._div = L.DomUtil.create('div', 'info');
+      this.update();
+      return this._div;
+    };
+    info.update = function(props) {
+      const label = layers[currentProp].label;
+      const val = props ? props[currentProp] : null;
+      const year = props && currentProp === 'poverty_headcount' && val != null ? '<br/>Most recent data: ' + props.year : '';
+      const display = val == null ? 'No data available' : formatVal(val);
+      this._div.innerHTML = '<h4>' + label + '</h4>' +
+        (props ? '<b>' + props.NAME_LONG + '</b><br/>' + display + year : 'Hover over a country');
+    };
+    info.addTo(map);
+
+    function onEachFeature(feature, layer) {
+      layer.on({
+        mouseover: function(e) {
+          e.target.setStyle({fillOpacity: 0.9 });
+          info.update(layer.feature.properties);
+        },
+        mouseout: function(e) {
+          carbon.resetStyle(e.target);
+          info.update();
+        },
+        click: function(e) {
+          map.fitBounds(e.target.getBounds());
+        }
+      });
+    }
+
+    var carbon = L.geoJson(ssa, {
+      style: style,
+      onEachFeature: onEachFeature
+    }).addTo(map);
+
+    // Layer toggle control
+    var toggleControl = L.control({position: 'bottomleft'});
+    toggleControl.onAdd = function(map) {
+      var div = L.DomUtil.create('div', 'info');
+      div.style.width = '150px';
+      div.innerHTML = '<h4>Select Layer</h4>';
+      Object.keys(layers).forEach(prop => {
+        var btn = L.DomUtil.create('button', 'layer-btn', div);
+        btn.id = 'btn_' + prop;
+        btn.textContent = layers[prop].label;
+        if (prop === currentProp) btn.classList.add('active');
+        btn.onclick = function() { switchLayer(prop); };
+      });
+      L.DomEvent.disableClickPropagation(div);
+      return div;
+    };
+    toggleControl.addTo(map);
+
+    function switchLayer(prop) {
+      currentProp = prop;
+      carbon.setStyle(style);
+      info.update();
+      updateLegend();
+      Object.keys(layers).forEach(p => {
+        document.getElementById('btn_' + p).classList.toggle('active', p === prop);
+      });
+    }
+
+    // Legend
+    var legend = L.control({position: 'bottomright'});
+    legend.onAdd = function(map) {
+      var div = L.DomUtil.create('div', 'info legend');
+      updateLegend(div);
+      return div;
+    };
+    legend.addTo(map);
+
+    function formatVal(val) {
+      if (val == null) return 'No data available';
+      if (currentProp === 'poverty_headcount' || currentProp === 'pct_agricultural') return val.toFixed(1) + '%';
+      return val.toLocaleString() + ' kg/m²';
+    }
+
+    function updateLegend(div) {
+      const container = div || legend.getContainer();
+      if (!container) return;
+      const b = breaks[currentProp];
+      const label = layers[currentProp].label;
+      let labels = ['<h4>' + label + '</h4>'];
+      for (let i = 0; i < b.length - 1; i++) {
+        const mid = (b[i] + b[i + 1]) / 2;
+        labels.push(
+          '<i style="background:' + getColor(mid, currentProp) + '"></i> ' +
+          formatVal(b[i]) + '&ndash;' + formatVal(b[i + 1])
+        );
+      }
+      container.innerHTML = labels.join('<br>');
+    }
+
+  </script>
+</body>
+</html>
