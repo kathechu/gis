@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Map SSA</title>
+  <title>Carbon Sequestration Suitability in Sub-Saharan Africa</title>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"/>
@@ -52,24 +52,29 @@
 
 <body>
   <div style="width:1000px; margin: 0 auto;">
-    <h1 align="center">Visualizing Carbon Stock in Sub-Saharan Africa</h1>
+    <h1 align="center">Exploratory Analysis of Carbon Sequestration Suitability in Sub-Saharan Africa</h1>
     <div id="map"></div>
+
+
+<p>Hover over a country to view its value for the respective layers. Toggle between layers using the panel in the bottom left. <br>For the Suitability Rank layer, the top five countries (low baseline carbon, high poverty, high agricultural land %) and the bottom five countries are highlighted green and red respectively.</p>
+<p><a href ="https://kathechu.github.io/gis/Final/Spring2026-Final-Public.html">Link to Python notebook detailing how the geoJson file was processed.</a></p>
 
 <nav>
   <h3>Table of Contents</h3>
   <ol>
+    
     <li><a href="#overview">Project Overview</a></li>
-    <li><a href="#stats">Summary Statistics</a></li>
     <li><a href="#sources">Data Sources</a></li>
-    <li><a href="#methodology">Methodology</a>
+    <li><a href="#mapdetails">Interactive Map Details</a></li>
+    <li><a href="#stats">Summary Statistics and Results</a></li>
+    <!-- <li><a href="#methodology">Methodology</a>
       <ol>
         <li><a href="#processing">Data Processing and Analysis</a></li>
         <li><a href="#results">Results</a></li>
-      </ol>
+      </ol> -->
     </li>
   </ol>
 </nav>
-
 
     <h2 id="overview">Project Overview</h2>
     <p>Carbon sequestration is the act of removing carbon dioxide from the atmosphere to store it in either a natural or artifical sink. Carbon dioxide, as one of the greenhouse gases, worsens the impact of climate change. Sub-Saharan Africa is one of the regions that are disproportionately impacted by climate change, with harshening weather conditions negatively affecting agriculture in the area. Climate change exacerbates the existing poverty faced by people who rely on their farms to support their family.<br><br>
@@ -81,11 +86,9 @@
     </figure>
     Sequestering carbon is only one method of many to address the climate crisis and this project serves as an exploratory analysis for where it can be implemented. As a result, the project does not consider external factors that may make biological carbon sinking projects difficult or inefficient to implement in certain regions of Sub-Saharan Africa. Further research and analysis into factors such as resource availability and agricultural land use type would be valuable for decision-making.</p>
 
-
-
 <h2 id="sources">Data Sources</h2>
 <p>My primary data sources are the Food and Agriculture Organization's <a href="https://data.apps.fao.org/wapor/?lang=en">WAter Productivity through Open-access of Remotely sensed derived data (WaPOR)</a> and <a href="https://data.isric.org/geonetwork/srv/eng/catalog.search#/home">International Soil Reference and Information Centre (ISRIC)</a>. I utilized WaPOR for their monthly net primary productivity (NPP) raster data, which serve as the basis for the aboveground carbon stock. For belowground carbon, ISRIC provides soil organic carbon (gC/kg) and bulk density (kg/m3) layers, which are separated into six soil depth layers. Additionally, ISRIC provides agricultural land data which is used to assess arable land suitability. To aid in the analysis, I also used a vector layer of Sub-Saharan country boundaries from <a href="https://registry.opendata.aws/naturalearth/">Amazon Web Services' Natural Earth dataset</a> and country-level poverty headcount data from the <a href="https://datahelpdesk.worldbank.org/knowledgebase/articles/906519">World Bank API</a>. All data processing was done using Amazon Web Services (AWS)'s E3 instance, with data stored in an S3 bucket. Python was used for data processing and analysis.</p>
-<h2 id="methodology">Methodology</h2>
+<!-- <h2 id="methodology">Methodology</h2>
 <h3 id="processing">Data Processing and Analysis</h3>
 <p>For the boundary data I read in only contiguous Sub-Saharan Africa countries, which resulted in 43 countries.
   <figure align="center">
@@ -118,8 +121,22 @@ To calculate annual NPP (gC/m2/month), I added each monthly NPP raster layer tog
     <img src="img/country_soc_npp_choropleth.png" alt="Choropleth Map of Carbon Stocks" style="width:100%;">
     <figcaption align="center">Choropleth map of above and belowground carbon stocks.</figcaption>
 </figure>
+</p> -->
+
+<h2 id="mapdetails">Interactive Map Details</h2>
+<p>The map was made using <a href="https://leafletjs.com/reference.html">Leaflet and Javascript</a>.
+  I referenced skills learned from GUS 8068: Webmapping and GIS on how to best visualize my data.
+  For example, I learned how to integrate geoJSON data in an interactive map from the course, so I was able to use my existing dataset and visualize it here with Leaflet.
+  I took inspiration from example code featured in the course as well for features such as the info window, that updates depending on the polygon the mouse is hovered over.
+  I also learned how to implement quantile classification to create the choropleth maps for each layer.
+  Overall the introductory material on Javascript gave me a better understanding on how to navigate the Leaflet documentation for adding in features to make this map a positive experience for the user.<br><br>
+  Creating an interactive map for this dataset makes the data much easier to view as the user can click each country and find its associated value for the current layer.
+  The static choropleth map, which is featured below, gives a general overview of the spatial clusters but does not give as much information compared to an interactive map.
+  More data can be added to a static map, but after a certain point it can become cluttered.
+  An interactive map keeps information organized and lets users highlight values they're specifically interested in.
 </p>
-    <h2 id="stats">Summary Statistics</h2>
+
+    <h2 id="stats">Summary Statistics and Results</h2>
 <table style="width: 90%; margin: 0 auto;">
   <thead>
     <tr>
@@ -145,8 +162,15 @@ To calculate annual NPP (gC/m2/month), I added each monthly NPP raster layer tog
     <tr><td>Max</td><td>85.30</td><td>37.26</td><td>61.34</td><td>2,217.08</td><td>1,379.76</td><td>2,217.08</td><td>1,385.41</td><td>95.79</td><td>99.65</td></tr>
   </tbody>
 </table>
-
 <p><i>*Poverty headcount data is unavailable for South Sudan, Somalia, Eritrea, and Republic of the Congo.</i></p><br>
+
+<figure>
+    <img src="img/violin.png" alt="Final Rankings Bar Chart" style="width:100%;">
+    <figcaption align="center">Violin Chart with Boxplot of Variables</figcaption>
+</figure><br>
+
+<p>The boxplot shows that there are no outliers for each of the variables apart from D.R. Congo, which contributes to the right skew of poverty rate distribution. The violin plot offers a different view of the carbon and arable land distributions, showing the slight left skew of overall normal distributions.</p>
+
 <table style="width: 90%; margin: 0 auto;">
   <thead>
     <tr>
@@ -158,20 +182,36 @@ To calculate annual NPP (gC/m2/month), I added each monthly NPP raster layer tog
   </thead>
   <tbody>
     <tr><td colspan="4" style="background:#7fb9d9; color:white; text-align:center;">Top 5 — Lowest Carbon + Highest Poverty + Highest Agricultural %</td></tr>
-    <tr><td>Burundi</td><td>26.17</td><td><b>74.2%</b></td><td>83.90%</td></tr>
-    <tr><td>Burkina Faso</td><td>80.95</td><td>42.1%</td><td>88.39%</td></tr>
-    <tr><td>Lesotho</td><td>18.44</td><td>41.9%</td><td><b>95.79%</b></td></tr>
-    <tr><td>Zimbabwe</td><td>284.84</td><td>49.2%</td><td>68.61%</td></tr>
-    <tr><td>The Gambia</td><td><b>3.89</b></td><td>22.0%</td><td>81.15%</td></tr>
+    <tr><td>Burkina Faso</td><td>360.02</td><td>42.1%</td><td>88.39%</td></tr>
+    <tr><td>Lesotho</td><td>656.00</td><td>41.9%</td><td><b>95.79%</b></td></tr>
+    <tr><td>Nigeria</td><td>545.66</td><td>41.8%</td><td>83.37%</td></tr>
+    <tr><td>Malawi</td><td>772.66</td><td><b>75.4%</b></td><td>67.80%</td></tr>
+    <tr><td>Niger</td><td><b>25.20</b></td><td>60.5%</td><td>22.67%</td></tr>
     <tr><td colspan="4" style="background:#7fb9d9; color:white; text-align:center;">Bottom 5 — Highest Carbon + Lowest Poverty + Lowest Agricultural %</td></tr>
-    <tr><td>Namibia</td><td>206.98</td><td>22.9%</td><td><b>4.99%</b></td></tr>
-    <tr><td>Guinea</td><td>201.45</td><td>11.7%</td><td>69.01%</td></tr>
-    <tr><td>Cameroon</td><td><b>441.49</b></td><td>26.7%</td><td>33.94%</td></tr>
-    <tr><td>Gabon</td><td>269.63</td><td><b>3.8%</b></td><td>9.01%</td></tr>
-    <tr><td>Equatorial Guinea</td><td>29.19</td><td>8.8%</td><td>5.56%</td></tr>
+    <tr><td>Botswana</td><td>555.57</td><td>21.4%</td><td>9.95%</td></tr>
+    <tr><td>Cameroon</td><td>1171.85</td><td>26.7%</td><td>33.94%</td></tr>
+    <tr><td>Liberia</td><td>1385.41</td><td>33.6%</td><td>7.96%</td></tr>
+    <tr><td>Gabon</td><td>1265.96</td><td><b>3.8%</b></td><td>9.01%</td></tr>
+    <tr><td>Equatorial Guinea</td><td><b>1340.63</b></td><td>8.8%</td><td><b>5.56%</b></td></tr>
   </tbody>
 </table>
-<p>Values are bolded based on their ranking in each column.</p>
+<p>Values are bolded based on their lowest/highest value in each column.</p>
+
+<figure>
+    <img src="img/rankbar.png" alt="Final Rankings Bar Chart" style="width:100%;">
+    <figcaption align="center">Bar Chart of Suitability Rankings</figcaption>
+</figure>
+
+<figure>
+    <img src="img/choroplethrank.png" alt="Rankings Choropleth" style="width:100%;">
+    <figcaption align="center">Choropleth of Suitability Rankings</figcaption>
+</figure>
+
+<p>The top five suitable countries are Burkina Faso, Lesotho, Nigeria, Malawi, and Niger. Of the top five, Burkina Faso, Nigeria, and Niger are spatially close to each other. For Burkina Faso and Nigeria, they both have a larger percentage of agricultural land (98% and 96% respectively) and similar poverty rate (42% for both). Though Burkina Faso's lower existing carbon of 360 kg/m2 puts it above Nigeria for suitability.
+<br>
+<br>The bottom five suitable countries are Equatorial Guinea, Gabon, Liberia, Cameroon, and Botswana. Interestingly, Equatorial Guinea, Gabon, and Cameroon are located close to countries that ranked higher, such as Nigeria and Niger. Of the bottom five, Botswana is the most interesting, as is has a carbon rank better than four of the top five countries. Howver, Botswana's lower poverty and agricultural land rank skews it to the bottom five.
+<br>
+<br> Overall, countries that ranked closer together tend to be spatially close, with clustering patterns visible in the choropleth map.</p>
 
   </div>
 
@@ -179,26 +219,23 @@ To calculate annual NPP (gC/m2/month), I added each monthly NPP raster layer tog
   <script src="final_joined.geojson"></script>
 
   <script>
-
+    // Set view to Sub-Saharan Africa
     var map = L.map('map').setView([-5, 20], 4);
 
+    // Simple tile layer to make choropleth map stand out more
     L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
       attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors © <a href="https://carto.com/">CARTO</a>'
     }).addTo(map);
 
-    // Layer definitions
+    // Layer and colors
     var layers = {
+      rank_combined: {
+        label: 'Suitability Rank',
+        colors: ['#1A9641','#A6D96A','#FFFFBF','#FDAE61','#D7191C','#7B0000']
+      },
       mean_total_kg_m2: {
         label: 'Mean Carbon Density (kg/m²)',
         colors: ['#EDF8FB','#BFD3E6','#9EBCDA','#8C96C6','#8856A7','#810F7C']
-      },
-      mean_npp_kg_m2: {
-        label: 'Mean NPP (kg/m²)',
-        colors: ['#EDF8E9','#BAE4B3','#74C476','#41AB5D','#238B45','#005A32']
-      },
-      mean_soc_kg_m2: {
-        label: 'Mean SOC (kg/m²)',
-        colors: ['#FEFEE2','#FEC44F','#FE9929','#EC7014','#CC4C02','#8C2D04']
       },
       pct_agricultural: {
         label: 'Agricultural Land (%)',
@@ -207,10 +244,19 @@ To calculate annual NPP (gC/m2/month), I added each monthly NPP raster layer tog
       poverty_headcount: {
         label: 'Poverty Headcount (%)',
         colors: ['#FFFFB2','#FED976','#FEB24C','#FD8D3C','#F03B20','#BD0026']
+      },
+      mean_npp_kg_m2: {
+        label: 'Mean NPP (kg/m²)',
+        colors: ['#EDF8E9','#BAE4B3','#74C476','#41AB5D','#238B45','#005A32']
+      },
+      mean_soc_kg_m2: {
+        label: 'Mean SOC (kg/m²)',
+        colors: ['#FEFEE2','#FEC44F','#FE9929','#EC7014','#CC4C02','#8C2D04']
       }
     };
 
-    var currentProp = 'mean_total_kg_m2';
+    // Set initial layer to the rank layers
+    var currentProp = 'rank_combined';
 
     // Quantile classification
     function calculateQuantiles(data, n) {
@@ -232,6 +278,7 @@ To calculate annual NPP (gC/m2/month), I added each monthly NPP raster layer tog
       );
     });
 
+    // Call for specific colors based on property and country's value
     function getColor(val, prop) {
       const b = breaks[prop];
       const colors = layers[prop].colors;
@@ -241,13 +288,24 @@ To calculate annual NPP (gC/m2/month), I added each monthly NPP raster layer tog
       return colors[colors.length - 1];
     }
 
+    // Select top 5 and bottom 5 suitability rank countries
+    var top5 = ['Burkina Faso', 'Lesotho', 'Nigeria', 'Malawi', 'Niger'];
+    var bottom5 = ['Botswana', 'Cameroon', 'Liberia', 'Gabon', 'Equatorial Guinea'];
+
+    // Based on if the country is top 5/bottom 5, change border color accordingly to highlight
     function style(feature) {
       const val = feature.properties[currentProp];
+      const name = feature.properties.NAME_LONG;
+      let borderColor = 'black';
+      if (currentProp === 'rank_combined') {
+        if (top5.includes(name)) borderColor = '#00FF00';
+        else if (bottom5.includes(name)) borderColor = '#FF0000';
+      }
       return {
         fillColor: val == null ? '#cccccc' : getColor(val, currentProp),
-        weight: 1,
+        weight: currentProp === 'rank_combined' && (top5.includes(name) || bottom5.includes(name)) ? 2.5 : 1,
         opacity: 1,
-        color: 'black',
+        color: borderColor,
         fillOpacity: 0.7
       };
     }
@@ -262,33 +320,58 @@ To calculate annual NPP (gC/m2/month), I added each monthly NPP raster layer tog
     info.update = function(props) {
       const label = layers[currentProp].label;
       const val = props ? props[currentProp] : null;
+      // Poverty headcount specific info
       const year = props && currentProp === 'poverty_headcount' && val != null ? '<br/>Most recent data: ' + props.year : '';
       const display = val == null ? 'No data available' : formatVal(val);
+      // Additional info  for the suitability rank layer
+      const extra = props ? [
+        '<br/><hr style="margin:4px 0"/>',
+        'Carbon Density: ' + (props.mean_total_kg_m2 != null ? props.mean_total_kg_m2.toLocaleString() + ' kg/m²' : 'N/A') + '<br/>',
+        'Agricultural Land: ' + (props.pct_agricultural != null ? props.pct_agricultural.toFixed(1) + '%' : 'N/A') + '<br/>',
+        'Poverty Headcount: ' + (props.poverty_headcount != null ? props.poverty_headcount.toFixed(1) + '%' : 'N/A')
+      ].join('') : '';
       this._div.innerHTML = '<h4>' + label + '</h4>' +
-        (props ? '<b>' + props.NAME_LONG + '</b><br/>' + display + year : 'Hover over a country');
+        (props ? '<b>' + props.NAME_LONG + '</b><br/>' + display + year + extra : 'Hover over a country');
     };
     info.addTo(map);
+    
+    // For highlighted borders on the first layer, make the border appear on top, rather than below, the normal borders
+    function bringHighlightedToFront() {
+      if (currentProp !== 'rank_combined') return;
+      carbon.eachLayer(function(l) {
+        const name = l.feature.properties.NAME_LONG;
+        if (top5.includes(name) || bottom5.includes(name)) l.bringToFront();
+      });
+    }
 
+    // Hover over to change info window and opacity of country polygon
     function onEachFeature(feature, layer) {
       layer.on({
+        // Property specific info
         mouseover: function(e) {
           e.target.setStyle({fillOpacity: 0.9 });
+          e.target.bringToFront();
           info.update(layer.feature.properties);
         },
+        // Default
         mouseout: function(e) {
           carbon.resetStyle(e.target);
+          bringHighlightedToFront();
           info.update();
         },
+        // Click on country to zoom in
         click: function(e) {
           map.fitBounds(e.target.getBounds());
         }
       });
     }
 
+    // Choropleth map
     var carbon = L.geoJson(ssa, {
       style: style,
       onEachFeature: onEachFeature
     }).addTo(map);
+    bringHighlightedToFront();
 
     // Layer toggle control
     var toggleControl = L.control({position: 'bottomleft'});
@@ -303,14 +386,17 @@ To calculate annual NPP (gC/m2/month), I added each monthly NPP raster layer tog
         if (prop === currentProp) btn.classList.add('active');
         btn.onclick = function() { switchLayer(prop); };
       });
+      // To avoid clicking on the map while using the layer toggle
       L.DomEvent.disableClickPropagation(div);
       return div;
     };
     toggleControl.addTo(map);
 
+    // Function to switch to different choropleth map layer
     function switchLayer(prop) {
       currentProp = prop;
       carbon.setStyle(style);
+      bringHighlightedToFront();
       info.update();
       updateLegend();
       Object.keys(layers).forEach(p => {
@@ -327,9 +413,11 @@ To calculate annual NPP (gC/m2/month), I added each monthly NPP raster layer tog
     };
     legend.addTo(map);
 
+    // Adjust units to match property
     function formatVal(val) {
       if (val == null) return 'No data available';
       if (currentProp === 'poverty_headcount' || currentProp === 'pct_agricultural') return val.toFixed(1) + '%';
+      if (currentProp === 'rank_combined') return val.toFixed(1);
       return val.toLocaleString() + ' kg/m²';
     }
 
