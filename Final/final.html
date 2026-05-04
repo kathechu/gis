@@ -67,11 +67,7 @@
     <li><a href="#sources">Data Sources</a></li>
     <li><a href="#mapdetails">Interactive Map Details</a></li>
     <li><a href="#stats">Summary Statistics and Results</a></li>
-    <!-- <li><a href="#methodology">Methodology</a>
-      <ol>
-        <li><a href="#processing">Data Processing and Analysis</a></li>
-        <li><a href="#results">Results</a></li>
-      </ol> -->
+
     </li>
   </ol>
 </nav>
@@ -88,40 +84,7 @@
 
 <h2 id="sources">Data Sources</h2>
 <p>My primary data sources are the Food and Agriculture Organization's <a href="https://data.apps.fao.org/wapor/?lang=en">WAter Productivity through Open-access of Remotely sensed derived data (WaPOR)</a> and <a href="https://data.isric.org/geonetwork/srv/eng/catalog.search#/home">International Soil Reference and Information Centre (ISRIC)</a>. I utilized WaPOR for their monthly net primary productivity (NPP) raster data, which serve as the basis for the aboveground carbon stock. For belowground carbon, ISRIC provides soil organic carbon (gC/kg) and bulk density (kg/m3) layers, which are separated into six soil depth layers. Additionally, ISRIC provides agricultural land data which is used to assess arable land suitability. To aid in the analysis, I also used a vector layer of Sub-Saharan country boundaries from <a href="https://registry.opendata.aws/naturalearth/">Amazon Web Services' Natural Earth dataset</a> and country-level poverty headcount data from the <a href="https://datahelpdesk.worldbank.org/knowledgebase/articles/906519">World Bank API</a>. All data processing was done using Amazon Web Services (AWS)'s E3 instance, with data stored in an S3 bucket. Python was used for data processing and analysis.</p>
-<!-- <h2 id="methodology">Methodology</h2>
-<h3 id="processing">Data Processing and Analysis</h3>
-<p>For the boundary data I read in only contiguous Sub-Saharan Africa countries, which resulted in 43 countries.
-  <figure align="center">
-    <img src="img/ssa_boundaries.png" alt="SSA Boundaries" style="width:50%;">
-    <figcaption align="center">Contiguous Sub-Saharan Africa countries.</figcaption>
-</figure>
-For the poverty data, I joined the country boundaries vector layer with the poverty headcount data using the country name as the key. As for the agricultural land data, I calculated the percentage of agricultural land by dividing the agricultural land area by the total land area for each country.
-  <figure align="center">
-    <img src="img/mal_africa2.png" alt="Agricultural Land" style="width:70%;">
-    <figcaption align="center">Agricultural land distribution.</figcaption>
-</figure>
-Total soil organic carbon (gC/m2) is calculated by multiplying the soil organic carbon content (gC/kg) by the bulk density (kg/m3) and the soil depth (m) for each raster layer. The reason why the soil data is separated into six layers is because each layer of soil has different properties, which can affect the distribution and storage of carbon. After processing the rasters, the figure below shows how soil organic carbon content increases with depth. After calculating each layer's soil organic carbon, I sum the six layers together to get the total soil organic carbon raster. 
-<figure>
-    <img src="img/soc_x_bld_x_depth.png" alt="Soil Organic Carbon at Different Depths" style="width:100%;">
-    <figcaption align="center">Varying soil organic carbon content at different depths.</figcaption>
-</figure>
-To calculate annual NPP (gC/m2/month), I added each monthly NPP raster layer together. After the raster calculations for each data source, I masked the rasters with the country boundaries vector layer. For the overall total carbon, I summed the total soil organic carbon raster and the total NPP raster together, which gives us a baseline estimate of the total carbon stock in Sub-Saharan Africa. 
-<figure>
-    <img src="img/masked_rasters.png" alt="Carbon Data Masked" style="width:100%;">
-    <figcaption align="center">Carbon data masked to Sub-Saharan Africa.</figcaption>
-</figure>
-</p>
-<h3 id="results">Results</h3>
-<p>I chose a choropleth map to visualize the distribution of carbon stocks and poverty rates across Sub-Saharan African countries. This makes it easier to compare across the different countries. Though, an additional interactive choropleth map was created to allow users to toggle between the different layers. This also makes it easier to view values specific to the country the user is interested in. The static choropleth maps below show the distribution of carbon stocks, poverty rates, and agricultural land across Sub-Saharan Africa.
-  <figure>
-    <img src="img/ssa_carbon_pov_ag.png" alt="Choropleth Map of Carbon Stocks, Poverty Rates, and Agricultural Land" style="width:100%;">
-    <figcaption align="center">Choropleth map of carbon stocks, poverty rates, and agricultural land.</figcaption>
-</figure><br>
-  <figure>
-    <img src="img/country_soc_npp_choropleth.png" alt="Choropleth Map of Carbon Stocks" style="width:100%;">
-    <figcaption align="center">Choropleth map of above and belowground carbon stocks.</figcaption>
-</figure>
-</p> -->
+
 
 <h2 id="mapdetails">Interactive Map Details</h2>
 <p>The map was made using <a href="https://leafletjs.com/reference.html">Leaflet and Javascript</a>.
@@ -212,7 +175,8 @@ To calculate annual NPP (gC/m2/month), I added each monthly NPP raster layer tog
 <br>The bottom five suitable countries are Equatorial Guinea, Gabon, Liberia, Cameroon, and Botswana. Interestingly, Equatorial Guinea, Gabon, and Cameroon are located close to countries that ranked higher, such as Nigeria and Niger. Of the bottom five, Botswana is the most interesting, as is has a carbon rank better than four of the top five countries. Howver, Botswana's lower poverty and agricultural land rank skews it to the bottom five.
 <br>
 <br> Overall, countries that ranked closer together tend to be spatially close, with clustering patterns visible in the choropleth map.</p>
-
+<p style="text-align:center;"><a href="#">Return to top</a></p>
+<br>
   </div>
 
   <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
